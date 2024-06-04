@@ -14,7 +14,9 @@ const CreateTeacher = () => {
   });
   const router = useRouter();
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -34,7 +36,7 @@ const CreateTeacher = () => {
       });
 
       if (response.ok) {
-        router.push("/");
+        router.push("/teachers");
       } else {
         console.error("Failed to create teacher");
       }

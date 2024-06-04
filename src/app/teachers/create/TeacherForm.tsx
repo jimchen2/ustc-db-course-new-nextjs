@@ -1,4 +1,3 @@
-// components/TeacherForm.tsx
 import React from "react";
 
 interface TeacherFormProps {
@@ -8,7 +7,9 @@ interface TeacherFormProps {
     gender: string;
     title: string;
   };
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  handleChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => void;
   handleSubmit: (e: React.FormEvent) => void;
 }
 
