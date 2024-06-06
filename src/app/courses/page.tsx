@@ -80,7 +80,7 @@ const CoursesPage = () => {
                 <br />
                 <strong>Total Hours:</strong> {course.totalHours}
                 <br />
-                <strong>Level:</strong> {course.level}
+                <strong>Level:</strong> {course.level === 1 ? "本科生课程" : "研究生课程"}
                 <br />
                 <em>Taught Courses:</em>
                 <ul className="list-disc pl-5">

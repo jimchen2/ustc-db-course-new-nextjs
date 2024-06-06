@@ -1,116 +1,68 @@
 "use client";
 
-import { useState } from "react";
-import AuthorForm from "./AuthorForm";
-import { handleAddAuthor, handleAuthorChange, handleSubmit, handleRemoveAuthor } from "./formHandlers";
+import React, { useState } from "react";
+import NameInput from "./NameInput";
+import SourceInput from "./SourceInput.tsx";
+import YearInput from "./YearInput";
+import TypeInput from "./TypeInput";
+import LevelInput from "./LevelInput";
+import PublishedPapersInput from "./PublishedPapersInput.tsx";
+import { useRouter } from "next/navigation";
 
 const CreatePaperPage = () => {
-  const [name, setName] = useState<string>("");
-  const [source, setSource] = useState<string>("");
-  const [year, setYear] = useState<number | null>(null);
-  const [type, setType] = useState<number | null>(null);
-  const [level, setLevel] = useState<number | null>(null);
-  const [authors, setAuthors] = useState<
-    { id: string; isCorrespondingAuthor: boolean; ranking: number }[]
-  >([{ id: "", isCorrespondingAuthor: false, ranking: 1 }]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
+  const [name, setName] = useState("");
+  const [source, setSource] = useState("");
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [type, setType] = useState(1);
+  const [level, setLevel] = useState(1);
+  const [publishedPapers, setPublishedPapers] = useState({});
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const paperData = { name, source, year, type, level, publishedPapers };
+
+    try {
+      const res = await fetch("/api/papers/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(paperData),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setSuccessMessage("Paper created successfully!");
+        setTimeout(() => {
+          router.push("/papers");
+        }, 2000);
+      } else {
+        const errorData = await res.json();
+        setErrorMessage(errorData.error || "Error creating paper");
+      }
+    } catch (error) {
+      setErrorMessage("An error occurred while creating the paper.");
+    }
+  };
 
   return (
-    <div>
-      <h1>Create a New Paper</h1>
-      <div>
-        <label>
-          Name:
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Source:
-          <input
-            type="text"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Year:
-          <input
-            type="number"
-            value={year || ""}
-            onChange={(e) => setYear(parseInt(e.target.value))}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Type:
-          <input
-            type="number"
-            value={type || ""}
-            onChange={(e) => setType(parseInt(e.target.value))}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Level:
-          <input
-            type="number"
-            value={level || ""}
-            onChange={(e) => setLevel(parseInt(e.target.value))}
-          />
-        </label>
-      </div>
-      <div>
-        <h3>Authors</h3>
-        {authors.map((author, index) => (
-          <AuthorForm
-            key={index}
-            index={index}
-            author={author}
-            handleAuthorChange={(index, field, value) =>
-              handleAuthorChange(index, field, value, authors, setAuthors)
-            }
-            handleRemoveAuthor={(index) =>
-              handleRemoveAuthor(index, authors, setAuthors)
-            }
-          />
-        ))}
-        <button onClick={() => handleAddAuthor(authors, setAuthors)}>Add Author</button>
-      </div>
-      <button
-        onClick={() =>
-          handleSubmit(
-            name,
-            source,
-            year,
-            type,
-            level,
-            authors,
-            setLoading,
-            setError,
-            setName,
-            setSource,
-            setYear,
-            setType,
-            setLevel,
-            setAuthors
-          )
-        }
-        disabled={loading}
-      >
-        {loading ? "Creating..." : "Create Paper"}
+    <form onSubmit={handleSubmit} className="max-w-sm">
+      <NameInput name={name} setName={setName} />
+      <SourceInput source={source} setSource={setSource} />
+      <YearInput year={year} setYear={setYear} />
+      <TypeInput type={type} setType={setType} />
+      <LevelInput level={level} setLevel={setLevel} />
+      <PublishedPapersInput publishedPapers={publishedPapers} setPublishedPapers={setPublishedPapers} />
+      <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded-md">
+        Create Paper
       </button>
-      {error && <p>{error}</p>}
-    </div>
+      {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+      {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
+    </form>
   );
 };
 

@@ -1,212 +1,107 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import TaughtCourseForm from "./TaughtCourseForm";
-import {
-  handleAddTaughtCourse,
-  handleTaughtCourseChange,
-  handleRemoveTaughtCourse,
-} from "./formHandlers";
+import IdInput from "../../create/IdInput";
+import NameInput from "../../create/NameInput";
+import TotalHoursInput from "../../create/TotalHoursInput";
+import LevelInput from "../../create/LevelInput";
+import TaughtCoursesInput from "../../create/TaughtCoursesInput";
 
-interface Teacher {
-  id: string;
-  name: string;
-  gender: number;
-  title: number;
-}
-
-interface TaughtCourse {
-  courseId: string;
-  teacherId: string;
-  year: number;
-  term: number;
-  teachingHours: number;
-  teacher: Teacher;
-}
-
-interface Course {
-  id: string;
-  name: string;
-  totalHours: number;
-  level: number;
-  taughtCourses: TaughtCourse[];
-}
 interface PageProps {
   params: {
     id: string;
   };
 }
-
 const EditCoursePage = ({ params }: PageProps) => {
+  const [id, setId] = useState("");
+  const [name, setName] = useState("");
+  const [totalHours, setTotalHours] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [taughtCourses, setTaughtCourses] = useState({});
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const router = useRouter();
-  const { id } = params;
-
-  const [course, setCourse] = useState<Course | null>(null);
-  const [name, setName] = useState<string>("");
-  const [totalHours, setTotalHours] = useState<number | null>(null);
-  const [level, setLevel] = useState<number | null>(null);
-  const [taughtCourses, setTaughtCourses] = useState<
-    { teacherId: string; year: number; term: number }[]
-  >([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
+  const { id: courseId } = params;
 
   useEffect(() => {
-    if (id) {
-      loadCourse(id as string);
-    }
-  }, [id]);
+    const fetchCourseData = async () => {
+      try {
+        const res = await fetch(`/api/courses/list/?id=${courseId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const course = data[0]; // Assuming the response is an array with a single course object
+          setId(course.id);
+          setName(course.name);
+          setTotalHours(course.totalHours);
+          setLevel(course.level);
+          setTaughtCourses(
+            course.taughtCourses.reduce((acc, tc, index) => {
+              acc[`course_${index}`] = tc;
+              return acc;
+            }, {})
+          );
+        } else {
+          setErrorMessage("Error fetching course data.");
+        }
+      } catch (error) {
+        setErrorMessage("An error occurred while fetching the course data.");
+      }
+    };
 
-  const loadCourse = async (courseId: string) => {
-    setLoading(true);
-    setError("");
+    if (courseId) {
+      fetchCourseData();
+    }
+  }, [courseId]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const courseData = { id, name, totalHours, level, taughtCourses };
 
     try {
-      const response = await fetch(`/api/courses/list?id=${courseId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch course");
-      }
-      const courses: Course[] = await response.json();
-      if (courses.length > 0) {
-        const course = courses[0];
-        setCourse(course);
-        setName(course.name);
-        setTotalHours(course.totalHours);
-        setLevel(course.level);
-        setTaughtCourses(
-          course.taughtCourses.map((tc) => ({
-            teacherId: tc.teacherId,
-            year: tc.year,
-            term: tc.term,
-          }))
-        );
-      } else {
-        setError("Course not found");
-      }
-    } catch (error) {
-      setError("Failed to fetch course");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitCourse = async () => {
-    if (!course) return;
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch("/api/courses/edit", {
+      const res = await fetch(`/api/courses/edit`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          id: course.id,
-          name,
-          totalHours: totalHours || 0,
-          level: level || 0,
-          taughtCourses,
-        }),
+        body: JSON.stringify(courseData),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update course");
+      if (res.ok) {
+        const data = await res.json();
+        setSuccessMessage("Course updated successfully!");
+        setTimeout(() => {
+          router.push("/courses");
+        }, 2000);
+      } else {
+        const errorData = await res.json();
+        setErrorMessage(errorData.error || "Error updating course");
       }
-
-      const data = await response.json();
-      console.log("Course updated:", data);
-      router.push("/courses");
     } catch (error) {
-      setError("Failed to update course");
-    } finally {
-      setLoading(false);
+      setErrorMessage("An error occurred while updating the course.");
     }
   };
 
   return (
-    <div>
-      <h1>Edit Course</h1>
-      {loading ? (
-        <p>Loading...</p>
-      ) : error ? (
-        <p>{error}</p>
-      ) : course ? (
-        <div>
-          <div>
-            <label>
-              Name:
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </label>
-          </div>
-          <div>
-            <label>
-              Total Hours:
-              <input
-                type="number"
-                value={totalHours || ""}
-                onChange={(e) => setTotalHours(parseInt(e.target.value))}
-              />
-            </label>
-          </div>
-          <div>
-            <label>
-              Level:
-              <input
-                type="number"
-                value={level || ""}
-                onChange={(e) => setLevel(parseInt(e.target.value))}
-              />
-            </label>
-          </div>
-          <div>
-            <h3>Taught Courses</h3>
-            {taughtCourses.map((taughtCourse, index) => (
-              <TaughtCourseForm
-                key={index}
-                index={index}
-                taughtCourse={taughtCourse}
-                handleTaughtCourseChange={(index, field, value) =>
-                  handleTaughtCourseChange(
-                    index,
-                    field,
-                    value,
-                    taughtCourses,
-                    setTaughtCourses
-                  )
-                }
-                handleRemoveTaughtCourse={(index) =>
-                  handleRemoveTaughtCourse(
-                    index,
-                    taughtCourses,
-                    setTaughtCourses
-                  )
-                }
-              />
-            ))}
-            <button
-              onClick={() =>
-                handleAddTaughtCourse(taughtCourses, setTaughtCourses)
-              }
-            >
-              Add Taught Course
-            </button>
-          </div>
-          <button onClick={handleSubmitCourse} disabled={loading}>
-            {loading ? "Updating..." : "Update Course"}
-          </button>
-          {error && <p>{error}</p>}
-        </div>
-      ) : (
-        <p>No course selected</p>
+    <form onSubmit={handleSubmit} className="max-w-sm">
+      <NameInput name={name} setName={setName} />
+      <TotalHoursInput totalHours={totalHours} setTotalHours={setTotalHours} />
+      <LevelInput level={level} setLevel={setLevel} />
+      <TaughtCoursesInput
+        taughtCourses={taughtCourses}
+        setTaughtCourses={setTaughtCourses}
+      />
+      <button
+        type="submit"
+        className="px-4 py-2 bg-green-500 text-white rounded-md"
+      >
+        Update Course
+      </button>
+      {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+      {successMessage && (
+        <p className="text-green-500 mt-4">{successMessage}</p>
       )}
-    </div>
+    </form>
   );
 };
 

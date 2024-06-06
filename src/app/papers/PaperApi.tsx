@@ -16,8 +16,8 @@ export interface PublishedPaper {
 export interface Paper {
   id: number;
   name: string;
-  source?: string;
-  year?: number;
+  source: string;
+  year: number;
   type: number;
   level: number;
   publishedPapers: PublishedPaper[];

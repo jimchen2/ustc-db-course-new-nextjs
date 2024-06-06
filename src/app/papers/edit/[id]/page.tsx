@@ -1,13 +1,12 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import AuthorForm from "./AuthorForm";
-import {
-  handleAddAuthor,
-  handleAuthorChange,
-  handleRemoveAuthor,
-} from "./formHandlers";
+import NameInput from "../../create/NameInput";
+import SourceInput from "../../create/SourceInput";
+import YearInput from "../../create/YearInput";
+import TypeInput from "../../create/TypeInput";
+import LevelInput from "../../create/LevelInput";
+import PublishedPapersInput from "../../create/PublishedPapersInput";
 
 interface PageProps {
   params: {
@@ -16,152 +15,107 @@ interface PageProps {
 }
 
 const EditPaperPage = ({ params }: PageProps) => {
+  const [name, setName] = useState("");
+  const [source, setSource] = useState("");
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [type, setType] = useState(1);
+  const [level, setLevel] = useState(1);
+  const [publishedPapers, setPublishedPapers] = useState({});
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const router = useRouter();
-  const { id } = params;
-
-  const [name, setName] = useState<string>("");
-  const [source, setSource] = useState<string>("");
-  const [year, setYear] = useState<number | null>(null);
-  const [type, setType] = useState<number | null>(null);
-  const [level, setLevel] = useState<number | null>(null);
-  const [authors, setAuthors] = useState<
-    { id: string; isCorrespondingAuthor: boolean; ranking: number }[]
-  >([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
+  const { id: paperId } = params;
 
   useEffect(() => {
-    const fetchPaper = async () => {
-      if (id) {
-        try {
-          const response = await fetch(`/api/papers/list?id=${id}`);
-          const data = await response.json();
-          const paper = data[0];
+    const fetchPaperData = async () => {
+      try {
+        const res = await fetch(`/api/papers/list/?id=${paperId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const paper = data[0]; // Assuming the response is an array with a single paper object
           setName(paper.name);
           setSource(paper.source);
           setYear(paper.year);
           setType(paper.type);
           setLevel(paper.level);
-          setAuthors(
-            paper.publishedPapers.map((author: any) => ({
-              id: author.teacherId,
-              isCorrespondingAuthor: author.isCorrespondingAuthor,
-              ranking: author.ranking,
-            }))
+          setPublishedPapers(
+            paper.publishedPapers.reduce((acc, pp, index) => {
+              acc[`published_${index}`] = pp;
+              return acc;
+            }, {})
           );
-        } catch (error) {
-          setError("Failed to load paper data");
+        } else {
+          setErrorMessage("Error fetching paper data.");
         }
+      } catch (error) {
+        setErrorMessage("An error occurred while fetching the paper data.");
       }
     };
 
-    fetchPaper();
-  }, [id]);
+    if (paperId) {
+      fetchPaperData();
+    }
+  }, [paperId]);
 
-  const handleUpdate = async () => {
-    setLoading(true);
-    setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const paperData = {
+      id: parseInt(paperId),
+      name,
+      source,
+      year,
+      type,
+      level,
+      publishedPapers,
+    };
 
     try {
-      const response = await fetch(`/api/papers/edit`, {
+      const res = await fetch(`/api/papers/edit`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id, name, source, year, type, level, authors }),
+        body: JSON.stringify(paperData),
       });
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
+      if (res.ok) {
+        const data = await res.json();
+        setSuccessMessage("Paper updated successfully!");
+        setTimeout(() => {
+          router.push("/papers");
+        }, 2000);
+      } else {
+        const errorData = await res.json();
+        setErrorMessage(errorData.error || "Error updating paper");
       }
-
-      const data = await response.json();
-      console.log("Paper updated:", data);
-      router.push("/papers");
     } catch (error) {
-      setError("Failed to update paper");
-    } finally {
-      setLoading(false);
+      setErrorMessage("An error occurred while updating the paper.");
     }
   };
 
   return (
-    <div>
-      <h1>Edit Paper</h1>
-      <div>
-        <label>
-          Name:
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Source:
-          <input
-            type="text"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Year:
-          <input
-            type="number"
-            value={year || ""}
-            onChange={(e) => setYear(parseInt(e.target.value))}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Type:
-          <input
-            type="number"
-            value={type || ""}
-            onChange={(e) => setType(parseInt(e.target.value))}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Level:
-          <input
-            type="number"
-            value={level || ""}
-            onChange={(e) => setLevel(parseInt(e.target.value))}
-          />
-        </label>
-      </div>
-      <div>
-        <h3>Authors</h3>
-        {authors.map((author, index) => (
-          <AuthorForm
-            key={index}
-            index={index}
-            author={author}
-            handleAuthorChange={(index, field, value) =>
-              handleAuthorChange(index, field, value, authors, setAuthors)
-            }
-            handleRemoveAuthor={(index) =>
-              handleRemoveAuthor(index, authors, setAuthors)
-            }
-          />
-        ))}
-        <button onClick={() => handleAddAuthor(authors, setAuthors)}>
-          Add Author
-        </button>
-      </div>
-      <button onClick={handleUpdate} disabled={loading}>
-        {loading ? "Updating..." : "Update Paper"}
+    <form onSubmit={handleSubmit} className="max-w-sm">
+      <NameInput name={name} setName={setName} />
+      <SourceInput source={source} setSource={setSource} />
+      <YearInput year={year} setYear={setYear} />
+      <TypeInput type={type} setType={setType} />
+      <LevelInput level={level} setLevel={setLevel} />
+      <PublishedPapersInput
+        publishedPapers={publishedPapers}
+        setPublishedPapers={setPublishedPapers}
+      />
+      <button
+        type="submit"
+        className="px-4 py-2 bg-green-500 text-white rounded-md"
+      >
+        Update Paper
       </button>
-      {error && <p>{error}</p>}
-    </div>
+      {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+      {successMessage && (
+        <p className="text-green-500 mt-4">{successMessage}</p>
+      )}
+    </form>
   );
 };
 

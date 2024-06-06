@@ -8,6 +8,7 @@
 //       }'
 
 
+// pages/api/teachers/delete.ts
 
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
@@ -33,6 +34,26 @@ export default async function handler(
     console.log("Parsed body:", { id });
 
     try {
+      // Delete all associated records
+      await prisma.publishedPaper.deleteMany({
+        where: {
+          teacherId: id,
+        },
+      });
+
+      await prisma.projectParticipant.deleteMany({
+        where: {
+          teacherId: id,
+        },
+      });
+
+      await prisma.taughtCourse.deleteMany({
+        where: {
+          teacherId: id,
+        },
+      });
+
+      // Delete the teacher
       const teacher = await prisma.teacher.delete({
         where: {
           id,
@@ -42,7 +63,7 @@ export default async function handler(
       console.log("Teacher deleted:", teacher);
       res
         .status(200)
-        .json({ message: "Teacher deleted successfully", teacher });
+        .json({ message: "Teacher and associated records deleted successfully", teacher });
     } catch (error) {
       console.error("Error deleting teacher:", error);
       res.status(500).json({ error: "Failed to delete teacher" });
