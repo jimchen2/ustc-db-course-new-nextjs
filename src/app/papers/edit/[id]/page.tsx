@@ -1,10 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AuthorForm from "./AuthorForm";
-import { handleAddAuthor, handleAuthorChange, handleSubmit, handleRemoveAuthor } from "./formHandlers";
+import {
+  handleAddAuthor,
+  handleAuthorChange,
+  handleRemoveAuthor,
+} from "./formHandlers";
 
-const CreatePaperPage = () => {
+interface PageProps {
+  params: {
+    id: string;
+  };
+}
+
+const EditPaperPage = ({ params }: PageProps) => {
+  const router = useRouter();
+  const { id } = params;
+
   const [name, setName] = useState<string>("");
   const [source, setSource] = useState<string>("");
   const [year, setYear] = useState<number | null>(null);
@@ -12,13 +26,68 @@ const CreatePaperPage = () => {
   const [level, setLevel] = useState<number | null>(null);
   const [authors, setAuthors] = useState<
     { id: string; isCorrespondingAuthor: boolean; ranking: number }[]
-  >([{ id: "", isCorrespondingAuthor: false, ranking: 1 }]);
+  >([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
+  useEffect(() => {
+    const fetchPaper = async () => {
+      if (id) {
+        try {
+          const response = await fetch(`/api/papers/list?id=${id}`);
+          const data = await response.json();
+          const paper = data[0];
+          setName(paper.name);
+          setSource(paper.source);
+          setYear(paper.year);
+          setType(paper.type);
+          setLevel(paper.level);
+          setAuthors(
+            paper.publishedPapers.map((author: any) => ({
+              id: author.teacherId,
+              isCorrespondingAuthor: author.isCorrespondingAuthor,
+              ranking: author.ranking,
+            }))
+          );
+        } catch (error) {
+          setError("Failed to load paper data");
+        }
+      }
+    };
+
+    fetchPaper();
+  }, [id]);
+
+  const handleUpdate = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(`/api/papers/edit`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, name, source, year, type, level, authors }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      console.log("Paper updated:", data);
+      router.push("/papers");
+    } catch (error) {
+      setError("Failed to update paper");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
-      <h1>Create a New Paper</h1>
+      <h1>Edit Paper</h1>
       <div>
         <label>
           Name:
@@ -84,34 +153,16 @@ const CreatePaperPage = () => {
             }
           />
         ))}
-        <button onClick={() => handleAddAuthor(authors, setAuthors)}>Add Author</button>
+        <button onClick={() => handleAddAuthor(authors, setAuthors)}>
+          Add Author
+        </button>
       </div>
-      <button
-        onClick={() =>
-          handleSubmit(
-            name,
-            source,
-            year,
-            type,
-            level,
-            authors,
-            setLoading,
-            setError,
-            setName,
-            setSource,
-            setYear,
-            setType,
-            setLevel,
-            setAuthors
-          )
-        }
-        disabled={loading}
-      >
-        {loading ? "Creating..." : "Create Paper"}
+      <button onClick={handleUpdate} disabled={loading}>
+        {loading ? "Updating..." : "Update Paper"}
       </button>
       {error && <p>{error}</p>}
     </div>
   );
 };
 
-export default CreatePaperPage;
+export default EditPaperPage;
