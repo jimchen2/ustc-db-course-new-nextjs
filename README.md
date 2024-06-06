@@ -25,7 +25,7 @@ sudo mkdir -p /var/www; sudo git clone https://github.com/jimchen2/ustc-db-cours
 
 # mysql -u root -p -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY 'your_root_password'; FLUSH PRIVILEGES;"
 
-sudo -u builduser bash -c 'cd /var/www/Website; npm install;npx prisma migrate dev --name init;'
+sudo -u builduser bash -c 'cd /var/www/Website; npm install;npx prisma migrate dev --name init;npm run build;'
 
 sudo systemctl stop nginx
 sudo systemctl stop ufw
