@@ -121,7 +121,8 @@ export default async function handler(
       res.status(201).json(paper);
     } catch (error) {
       console.error(error);
-      if (error.code === "P2002") {
+      const prismaError = error as { code?: string };
+      if (prismaError.code === "P2002") {
         res
           .status(409)
           .json({

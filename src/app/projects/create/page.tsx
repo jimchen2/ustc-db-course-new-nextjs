@@ -26,12 +26,6 @@ const CreateProjectPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Client-side validation
-    if (!id || !name || !source || !projectType || !totalFunding || !startYear || !endYear || !Object.keys(projectParticipants).length) {
-      setErrorMessage("All fields are required.");
-      return;
-    }
-
     const projectData = { id, name, source, projectType, totalFunding, startYear, endYear, projectParticipants };
 
     try {
@@ -60,14 +54,14 @@ const CreateProjectPage = () => {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-sm">
-      <IdInput id={id} setId={setId} required />
-      <NameInput name={name} setName={setName} required />
-      <SourceInput source={source} setSource={setSource} required />
-      <ProjectTypeInput projectType={projectType} setProjectType={setProjectType} required />
-      <FundingInput totalFunding={totalFunding} setTotalFunding={setTotalFunding} required />
-      <YearInput label="Start Year" year={startYear} setYear={setStartYear} required />
-      <YearInput label="End Year" year={endYear} setYear={setEndYear} required />
-      <ProjectParticipantsInput projectParticipants={projectParticipants} setProjectParticipants={setProjectParticipants} required />
+      <IdInput id={id} setId={setId} />
+      <NameInput name={name} setName={setName} />
+      <SourceInput source={source} setSource={setSource} />
+      <ProjectTypeInput projectType={projectType} setProjectType={setProjectType} />
+      <FundingInput totalFunding={totalFunding} setTotalFunding={setTotalFunding} />
+      <YearInput label="Start Year" year={startYear} setYear={setStartYear} />
+      <YearInput label="End Year" year={endYear} setYear={setEndYear} />
+      <ProjectParticipantsInput projectParticipants={projectParticipants} setProjectParticipants={setProjectParticipants} />
       <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded-md">
         Create Project
       </button>

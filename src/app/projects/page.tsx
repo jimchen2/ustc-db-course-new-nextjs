@@ -80,7 +80,23 @@ const ProjectsPage = () => {
                 <br />
                 <strong>Source:</strong> {project.source}
                 <br />
-                <strong>Project Type:</strong> {project.projectType}
+                <strong>Project Type:</strong>{" "}
+                {(() => {
+                  switch (project.projectType) {
+                    case 1:
+                      return "国家级项目";
+                    case 2:
+                      return "省部级项目";
+                    case 3:
+                      return "市厅级项目";
+                    case 4:
+                      return "企业合作项目";
+                    case 5:
+                      return "其它类型项目";
+                    default:
+                      return "未知类型";
+                  }
+                })()}
                 <br />
                 <strong>Total Funding:</strong> {project.totalFunding}
                 <br />
@@ -91,8 +107,11 @@ const ProjectsPage = () => {
                 <em>Participants:</em>
                 <ul className="list-disc pl-5">
                   {project.projectParticipants.map((participant) => (
-                    <li key={`${participant.projectId}-${participant.teacherId}`}>
-                      Teacher: {participant.teacher.name} - Ranking: {participant.ranking}, Funding: {participant.funding}
+                    <li
+                      key={`${participant.projectId}-${participant.teacherId}`}
+                    >
+                      Teacher: {participant.teacher.name} - Ranking:{" "}
+                      {participant.ranking}, Funding: {participant.funding}
                     </li>
                   ))}
                 </ul>

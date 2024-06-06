@@ -83,7 +83,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(200).json(project);
     } catch (error) {
       console.error(error);
-      if (error.code === 'P2002') {
+      const prismaError = error as { code?: string };
+      if (prismaError.code === 'P2002') {
         res.status(409).json({ error: "Teacher's rankings should be unique." });
       } else {
         res.status(500).json({ error: "An error occurred while updating the project." });

@@ -14,7 +14,23 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === "PUT") {
-    const { id, name, source, year, type, level, publishedPapers }: { id: number, name: string, source: string, year: number, type: number, level: number, publishedPapers: { [key: string]: PublishedPaper } } = req.body;
+    const {
+      id,
+      name,
+      source,
+      year,
+      type,
+      level,
+      publishedPapers,
+    }: {
+      id: number;
+      name: string;
+      source: string;
+      year: number;
+      type: number;
+      level: number;
+      publishedPapers: { [key: string]: PublishedPaper };
+    } = req.body;
 
     try {
       // Validate fields
@@ -85,7 +101,8 @@ export default async function handler(
       res.status(200).json(paper);
     } catch (error) {
       console.error(error);
-      if (error.code === 'P2002') {
+      const prismaError = error as { code?: string };
+      if (prismaError.code === 'P2002') {
         res.status(409).json({ error: "Teacher's rankings should be unique." });
       } else {
         res.status(500).json({ error: "An error occurred while updating the paper." });

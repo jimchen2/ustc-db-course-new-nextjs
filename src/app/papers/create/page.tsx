@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 import NameInput from "./NameInput";
-import SourceInput from "./SourceInput.tsx";
+import SourceInput from "./SourceInput";
 import YearInput from "./YearInput";
 import TypeInput from "./TypeInput";
 import LevelInput from "./LevelInput";
-import PublishedPapersInput from "./PublishedPapersInput.tsx";
+import PublishedPapersInput from "./PublishedPapersInput";
 import { useRouter } from "next/navigation";
 
 const CreatePaperPage = () => {

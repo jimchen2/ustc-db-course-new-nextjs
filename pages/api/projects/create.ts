@@ -9,7 +9,10 @@ interface ProjectParticipant {
   funding?: number;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method === "POST") {
     const {
       id,
@@ -33,7 +36,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
       // Validate fields
-      if (!id || !name || projectType === undefined || !projectParticipants || totalFunding === undefined) {
+      if (
+        !id ||
+        !name ||
+        projectType === undefined ||
+        !projectParticipants ||
+        totalFunding === undefined
+      ) {
         return res.status(400).json({ error: "Invalid input data." });
       }
 
@@ -50,7 +59,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       for (const teacherId of teacherIds) {
         if (!existingTeacherIds.has(teacherId)) {
-          return res.status(400).json({ error: `Teacher with ID ${teacherId} does not exist.` });
+          return res
+            .status(400)
+            .json({ error: `Teacher with ID ${teacherId} does not exist.` });
         }
       }
 
@@ -58,15 +69,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const rankingSet = new Set();
       for (const pp of projectParticipantsArray) {
         if (rankingSet.has(pp.ranking)) {
-          return res.status(400).json({ error: `Duplicate ranking found: ${pp.ranking}` });
+          return res
+            .status(400)
+            .json({ error: `Duplicate ranking found: ${pp.ranking}` });
         }
         rankingSet.add(pp.ranking);
       }
 
       // Check if the sum of participant fundings matches total funding
-      const totalParticipantFunding = projectParticipantsArray.reduce((sum, pp) => sum + (pp.funding || 0), 0);
+      const totalParticipantFunding = projectParticipantsArray.reduce(
+        (sum, pp) => sum + (pp.funding || 0),
+        0
+      );
       if (totalParticipantFunding !== totalFunding) {
-        return res.status(400).json({ error: "Total participant funding does not match total project funding." });
+        return res
+          .status(400)
+          .json({
+            error:
+              "Total participant funding does not match total project funding.",
+          });
       }
 
       // Check if a project with the same id, name, and source already exists
@@ -75,7 +96,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       if (existingProject) {
-        return res.status(400).json({ error: "Project with the same id, name, and source already exists." });
+        return res
+          .status(400)
+          .json({
+            error: "Project with the same id, name, and source already exists.",
+          });
       }
 
       // Create the project and associated project participants
@@ -107,10 +132,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(201).json(project);
     } catch (error) {
       console.error(error);
-      if (error.code === "P2002") {
-        res.status(409).json({ error: "A record with the same primary key already exists." });
+      const prismaError = error as { code?: string };
+      if (prismaError.code === "P2002") {
+        res
+          .status(409)
+          .json({
+            error: "A record with the same primary key already exists.",
+          });
       } else {
-        res.status(500).json({ error: "An error occurred while creating the project." });
+        res
+          .status(500)
+          .json({ error: "An error occurred while creating the project." });
       }
     }
   } else {
