@@ -1,3 +1,4 @@
+```
 sudo fallocate -l "2G" /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
@@ -15,9 +16,9 @@ sudo passwd -d builduser
 echo 'builduser ALL=(ALL) NOPASSWD: ALL' | sudo tee /etc/sudoers.d/builduser
 
 sudo systemctl enable --now mariadb
-
+```
 ##################################################################
-
+```
 sudo mkdir -p /var/www; sudo git clone https://github.com/jimchen2/ustc-db-course-new-nextjs /var/www/Website; sudo chown -R builduser:builduser /var/www/Website
 sudo -u builduser bash -c 'cd /var/www/Website; npm install;npx prisma migrate dev --name init;'
 
@@ -34,3 +35,4 @@ sudo systemctl enable --now nginx
 sudo cp /var/www/Website/website.service /etc/systemd/system/website.service
 sudo cp /var/www/Website/update-website.service /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable --now website.service
+```
