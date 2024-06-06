@@ -20,6 +20,8 @@ sudo systemctl enable --now mariadb
 ##################################################################
 ```
 sudo mkdir -p /var/www; sudo git clone https://github.com/jimchen2/ustc-db-course-new-nextjs /var/www/Website; sudo chown -R builduser:builduser /var/www/Website
+
+# Configure password for database
 sudo -u builduser bash -c 'cd /var/www/Website; npm install;npx prisma migrate dev --name init;'
 
 sudo systemctl stop nginx
