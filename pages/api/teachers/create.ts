@@ -1,19 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
 
-
-// curl -X POST http://localhost:3000/api/teachers/create \
-//   -H "Content-Type: application/json" \
-//   -d '{
-//         "id": 1,
-//         "name": "John Doe",
-//         "gender": "1",
-//         "title": "2"
-//       }'
-
-
-
-
 const prisma = new PrismaClient();
 
 export default async function handler(
@@ -33,6 +20,20 @@ export default async function handler(
       const parsedTitle = parseInt(title);
 
       console.log("Parsed gender and title:", { parsedGender, parsedTitle });
+
+      // Check for duplicates
+      const existingTeacher = await prisma.teacher.findFirst({
+        where: {
+          OR: [{ id: id.toString() }],
+        },
+      });
+
+      if (existingTeacher) {
+        res
+          .status(409)
+          .json({ error: "Teacher with the same ID already exists" });
+        return;
+      }
 
       const teacher = await prisma.teacher.create({
         data: {

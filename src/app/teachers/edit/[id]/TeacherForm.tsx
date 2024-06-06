@@ -21,23 +21,7 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="max-w-sm">
       <div className="mb-4">
-        <label htmlFor="id" className="block text-gray-700 font-bold mb-2">
-          ID:
-        </label>
-        <input
-          type="text"
-          id="id"
-          name="id"
-          value={formData.id}
-          onChange={handleChange}
-          required
-          maxLength={5}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        />
-        <p className="text-sm text-gray-500">最多 5 个字符</p>
-      </div>
-      <div className="mb-4">
-        <label htmlFor="name" className="block text-gray-700 font-bold mb-2">
+        <label htmlFor="name" className="block mb-2">
           姓名:
         </label>
         <input
@@ -46,14 +30,11 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
           name="name"
           value={formData.name}
           onChange={handleChange}
-          required
-          maxLength={256}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded"
         />
-        <p className="text-sm text-gray-500">最多 256 个字符</p>
       </div>
       <div className="mb-4">
-        <label htmlFor="gender" className="block text-gray-700 font-bold mb-2">
+        <label htmlFor="gender" className="block mb-2">
           性别:
         </label>
         <select
@@ -61,8 +42,7 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
           name="gender"
           value={formData.gender}
           onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded"
         >
           <option value="">选择性别</option>
           <option value="1">男</option>
@@ -71,7 +51,7 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
         </select>
       </div>
       <div className="mb-4">
-        <label htmlFor="title" className="block text-gray-700 font-bold mb-2">
+        <label htmlFor="title" className="block mb-2">
           职称:
         </label>
         <select
@@ -79,8 +59,7 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
           name="title"
           value={formData.title}
           onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded"
         >
           <option value="">选择职称</option>
           <option value="1">博士后</option>
@@ -98,9 +77,9 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
       </div>
       <button
         type="submit"
-        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
       >
-        创建教师
+        更新
       </button>
     </form>
   );

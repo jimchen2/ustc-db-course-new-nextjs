@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Course, fetchCourses, deleteCourse } from "./CourseApi";
 
 const CoursesPage = () => {
@@ -8,6 +9,7 @@ const CoursesPage = () => {
   const [searchId, setSearchId] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const router = useRouter();
 
   useEffect(() => {
     loadCourses();
@@ -46,26 +48,32 @@ const CoursesPage = () => {
   };
 
   return (
-    <div>
-      <h1>List of Courses</h1>
-      <div>
+    <div className="container mx-auto py-8">
+      <h1 className="text-2xl font-bold mb-4">List of Courses</h1>
+      <div className="mb-4">
         <input
           type="text"
           value={searchId}
           onChange={(e) => setSearchId(e.target.value)}
           placeholder="Search by ID"
+          className="p-2 border border-gray-300 rounded-md mr-2"
         />
-        <button onClick={handleSearch}>Search</button>
+        <button
+          onClick={handleSearch}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        >
+          Search
+        </button>
       </div>
       {loading ? (
         <p>Loading...</p>
       ) : error ? (
         <p>{error}</p>
       ) : (
-        <ul>
+        <ul className="list-disc pl-5">
           {courses.map((course) => (
-            <li key={course.id}>
-              <div>
+            <li key={course.id} className="mb-4">
+              <div className="border p-4 rounded-md shadow-md">
                 <strong>ID:</strong> {course.id}
                 <br />
                 <strong>Name:</strong> {course.name}
@@ -75,14 +83,31 @@ const CoursesPage = () => {
                 <strong>Level:</strong> {course.level}
                 <br />
                 <em>Taught Courses:</em>
-                <ul>
+                <ul className="list-disc pl-5">
                   {course.taughtCourses.map((taughtCourse) => (
-                    <li key={`${taughtCourse.courseId}-${taughtCourse.teacherId}`}>
-                      Teacher: {taughtCourse.teacher.name} - Year: {taughtCourse.year}, Term: {taughtCourse.term}, Teaching Hours: {taughtCourse.teachingHours}
+                    <li
+                      key={`${taughtCourse.courseId}-${taughtCourse.teacherId}`}
+                    >
+                      Teacher: {taughtCourse.teacher.name} - Year:{" "}
+                      {taughtCourse.year}, Term: {taughtCourse.term}, Teaching
+                      Hours: {taughtCourse.teachingHours}
                     </li>
                   ))}
                 </ul>
-                <button onClick={() => handleDelete(course.id)}>Delete</button>
+                <div className="flex space-x-2 mt-2">
+                  <button
+                    onClick={() => handleDelete(course.id)}
+                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => router.push(`/courses/edit/${course.id}`)}
+                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+                  >
+                    Edit
+                  </button>
+                </div>
               </div>
             </li>
           ))}

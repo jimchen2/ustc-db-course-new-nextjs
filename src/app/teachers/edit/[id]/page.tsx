@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import TeacherForm from "./TeacherForm";
 
 interface Teacher {
   id: string;
@@ -18,9 +19,13 @@ interface PageProps {
 
 const EditTeacherPage = ({ params }: PageProps) => {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [name, setName] = useState("");
-  const [gender, setGender] = useState<number | null>(null);
-  const [title, setTitle] = useState<number | null>(null);
+  const [formData, setFormData] = useState({
+    id: "",
+    name: "",
+    gender: "",
+    title: "",
+  });
+  const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
   const { id } = params;
@@ -32,99 +37,80 @@ const EditTeacherPage = ({ params }: PageProps) => {
   const fetchTeacher = async (id: string) => {
     try {
       const response = await fetch(`/api/teachers/list?id=${id}`);
-      console.log(response);
       const data = await response.json();
       if (data.length > 0) {
         const teacherData = data[0];
         setTeacher(teacherData);
-        setName(teacherData.name);
-        setGender(teacherData.gender);
-        setTitle(teacherData.title);
+        setFormData({
+          id: teacherData.id,
+          name: teacherData.name,
+          gender: teacherData.gender.toString(),
+          title: teacherData.title.toString(),
+        });
       }
     } catch (error) {
       console.error("Error fetching teacher:", error);
+      setError("获取教师信息失败");
     }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!id || !name || gender === null || title === null) {
-      console.log("Invalid form data");
+    if (!id || !formData.name || !formData.gender || !formData.title) {
+      setError("表单数据无效");
       return;
     }
 
     try {
-      await fetch(`/api/teachers/edit`, {
+      const response = await fetch(`/api/teachers/edit`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id, name, gender, title }),
+        body: JSON.stringify({
+          id: formData.id,
+          name: formData.name,
+          gender: parseInt(formData.gender),
+          title: parseInt(formData.title),
+        }),
       });
-      router.push("/teachers");
+
+      if (response.ok) {
+        router.push("/teachers");
+      } else {
+        const data = await response.json();
+        setError(data.error || "更新教师信息失败");
+      }
     } catch (error) {
       console.error("Error updating teacher:", error);
+      setError("更新教师信息失败");
     }
   };
 
   if (!teacher) {
-    return <div>Loading...</div>;
+    return <div>加载中...</div>;
   }
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Edit Teacher</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label htmlFor="name" className="block mb-2">
-            Name:
-          </label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-          />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="gender" className="block mb-2">
-            Gender:
-          </label>
-          <select
-            id="gender"
-            value={gender ?? ""}
-            onChange={(e) => setGender(parseInt(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-          >
-            <option value="">Select gender</option>
-            <option value={0}>Male</option>
-            <option value={1}>Female</option>
-          </select>
-        </div>
-        <div className="mb-4">
-          <label htmlFor="title" className="block mb-2">
-            Title:
-          </label>
-          <select
-            id="title"
-            value={title ?? ""}
-            onChange={(e) => setTitle(parseInt(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
-          >
-            <option value="">Select title</option>
-            <option value={0}>Dr.</option>
-            <option value={1}>Prof.</option>
-          </select>
-        </div>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Update
-        </button>
-      </form>
+      <h1 className="text-2xl font-bold mb-4">编辑教师</h1>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <TeacherForm
+        formData={formData}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+      />
     </div>
   );
 };
