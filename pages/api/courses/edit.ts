@@ -7,6 +7,7 @@ interface TaughtCourse {
   teacherId: string;
   year: number;
   term: number;
+  teachingHours: number;
 }
 
 export default async function handler(
@@ -25,7 +26,7 @@ export default async function handler(
       name: string;
       totalHours: number;
       level: number;
-      taughtCourses: { [key: string]: TaughtCourse };
+      taughtCourses: TaughtCourse[];
     } = req.body;
 
     try {
@@ -35,16 +36,15 @@ export default async function handler(
         !name ||
         totalHours === undefined ||
         level === undefined ||
-        !taughtCourses
+        !taughtCourses ||
+        !Array.isArray(taughtCourses) || // Check if taughtCourses is an array
+        taughtCourses.length === 0
       ) {
         return res.status(400).json({ error: "Invalid input data." });
       }
 
-      // Convert taughtCourses object to array
-      const taughtCoursesArray = Object.values(taughtCourses);
-
       // Check if all teachers exist
-      const teacherIds = taughtCoursesArray.map((tc) => tc.teacherId);
+      const teacherIds = taughtCourses.map((tc) => tc.teacherId);
       const existingTeachers = await prisma.teacher.findMany({
         where: { id: { in: teacherIds } },
         select: { id: true },
@@ -59,8 +59,26 @@ export default async function handler(
         }
       }
 
-      // Calculate teachingHours for each taughtCourse
-      const teachingHours = totalHours / taughtCoursesArray.length;
+      // Group taughtCourses by year and term and validate teaching hours
+      const groupedTeachingHours: { [key: string]: number } = {};
+
+      for (const tc of taughtCourses) {
+        if (tc.teachingHours <= 0) {
+          return res.status(400).json({ error: "Teaching hours must be greater than 0." });
+        }
+
+        const key = `${tc.year}-${tc.term}`;
+        if (!groupedTeachingHours[key]) {
+          groupedTeachingHours[key] = 0;
+        }
+        groupedTeachingHours[key] += tc.teachingHours;
+      }
+
+      for (const key in groupedTeachingHours) {
+        if (groupedTeachingHours[key] !== totalHours) {
+          return res.status(400).json({ error: `Total teaching hours for ${key} do not match the specified total hours.` });
+        }
+      }
 
       // Update the Course record
       const course = await prisma.course.update({
@@ -78,12 +96,12 @@ export default async function handler(
       });
 
       await prisma.taughtCourse.createMany({
-        data: taughtCoursesArray.map((taughtCourse) => ({
+        data: taughtCourses.map((taughtCourse) => ({
           courseId: id,
           teacherId: taughtCourse.teacherId,
           year: taughtCourse.year,
           term: taughtCourse.term,
-          teachingHours: teachingHours,
+          teachingHours: taughtCourse.teachingHours,
         })),
       });
 

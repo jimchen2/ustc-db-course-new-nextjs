@@ -73,11 +73,12 @@ model Course {
 model TaughtCourse {
   courseId      String  @map("course_id") @db.VarChar(256)
   teacherId     String  @map("teacher_id") @db.Char(5)
-  year          Int?
+  year          Int
   term          Int
   teachingHours Int?    @map("teaching_hours")
   course        Course  @relation(fields: [courseId], references: [id])
   teacher       Teacher @relation(fields: [teacherId], references: [id])
 
-  @@id([courseId, teacherId])
+  @@id([courseId, teacherId, year, term])
 }
+

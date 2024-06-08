@@ -1,6 +1,3 @@
-// curl -X GET http://localhost:3000/api/courses/list
-// curl -X GET http://localhost:3000/api/courses/list?id=courseId
-
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
 
@@ -43,6 +40,7 @@ export default async function handler(
 
       res.status(200).json(courses);
     } catch (error) {
+      console.error(error);
       res
         .status(500)
         .json({ error: "An error occurred while fetching the courses." });

@@ -7,6 +7,7 @@ import TotalHoursInput from "./TotalHoursInput";
 import LevelInput from "./LevelInput";
 import TaughtCoursesInput from "./TaughtCoursesInput";
 import { useRouter } from "next/navigation";
+
 const CreateCoursePage = () => {
   const [id, setId] = useState("");
   const [name, setName] = useState("");
@@ -20,7 +21,36 @@ const CreateCoursePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const courseData = { id, name, totalHours, level, taughtCourses };
+    // Group taughtCourses by year and term and validate teaching hours
+    const groupedTeachingHours = {};
+
+    for (const key in taughtCourses) {
+      const { year, term, teachingHours } = taughtCourses[key];
+      if (teachingHours <= 0) {
+        setErrorMessage("Teaching hours must be greater than 0.");
+        return;
+      }
+      const groupKey = `${year}-${term}`;
+      if (!groupedTeachingHours[groupKey]) {
+        groupedTeachingHours[groupKey] = 0;
+      }
+      groupedTeachingHours[groupKey] += teachingHours;
+    }
+
+    for (const key in groupedTeachingHours) {
+      if (groupedTeachingHours[key] !== totalHours) {
+        setErrorMessage(`Total teaching hours for ${key} do not match the specified total hours.`);
+        return;
+      }
+    }
+
+    const courseData = {
+      id,
+      name,
+      totalHours,
+      level,
+      taughtCourses: Object.values(taughtCourses),
+    };
 
     try {
       const res = await fetch("/api/courses/create", {

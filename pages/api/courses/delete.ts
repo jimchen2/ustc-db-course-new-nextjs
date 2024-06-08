@@ -1,9 +1,3 @@
-// curl -X DELETE http://localhost:3000/api/courses/delete \
-// -H "Content-Type: application/json" \
-// -d '{
-//   "id": "courseId"
-// }'
-
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
 
@@ -29,6 +23,7 @@ export default async function handler(
 
       res.status(200).json({ message: "Course deleted successfully" });
     } catch (error) {
+      console.error(error);
       res
         .status(500)
         .json({ error: "An error occurred while deleting the course." });
